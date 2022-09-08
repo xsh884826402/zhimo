@@ -8,6 +8,7 @@
                         <div class="echarts_map" ref="charts"></div>
                     </div>
                 </el-col>
+
 <!--                <el-col span="12" style="background-color:blue">-->
 <!--                :file-list="fileList"-->
                 <el-col span=8 style="background-color: #E9EEF3" >
@@ -24,7 +25,7 @@
                                 <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
                                 <div slot="tip" class="el-upload__tip">请根据模板填写输入信息上</div>
                             </el-upload>
-                            <el-button>下载模板</el-button>
+                            <el-button @click="getInputTemplate">下载模板</el-button>
 <!--                            <el-button>删除文件</el-button>-->
                             <el-form-item label="新建仓数量" prop="newWarehouseLocationNumber">
                                 <el-input v-model="formData1.warehouseLocationNumber" type="number" :min="1" ></el-input>
@@ -35,11 +36,43 @@
                                     <el-radio label="不指定仓"></el-radio>
                                 </el-radio-group>
                             </el-form-item>
-                            <el-button>高级配置</el-button>
+                            <el-dialog
+                                title="提示"
+                                :visible.sync="dialog1Visible"
+                                width="30%"
+                                :before-close="handleClose">
+<!--                                <span>这是一段信息</span>-->
+                                <span slot="footer" class="dialog-footer">
+                                    <el-form-item label="分仓选址算法">
+                                        <el-radio-group v-model="formData1.algori">
+                                            <el-radio label="综合最优"></el-radio>
+                                            <el-radio label="运算最快"></el-radio>
+                                            <el-radio label="效果最优"></el-radio>
+                                        </el-radio-group>
+                                    </el-form-item>
+                                    <el-form-item label="是否需要获取经纬度">
+                                        <el-radio-group v-model="formData1.needgetJingWeiDu">
+                                            <el-radio label="需要"></el-radio>
+                                            <el-radio label="不需要"></el-radio>
+                                        </el-radio-group>
+                                    </el-form-item>
+                                <el-button @click="cancleHighLevelConfig">取 消</el-button>
+                                <el-button type="primary" @click="dialog1Visible = false">确 定</el-button>
+                                </span>
+                            </el-dialog>
+                            <el-button @click="dialog1Visible = true">高级配置</el-button>
+                            <el-dialog
+                                title="提示"
+                                :visible.sync="dialog2Visible"
+                                width="30%"
+                                :before-close="handleClose"
+                            >
+                                <span>模型计算中，请等待</span>
+                            </el-dialog>
                             <el-button @click="submitForm('formData1')">开始计算</el-button>
                     </el-form>
                     <el-form :model="formData2">
-                        <el-tag>获取时限</el-tag>
+<!--                        <el-tag>获取时限</el-tag>-->
                         <el-divider content-position="center">获取时限</el-divider>
                         <el-button @click="submitgetTimeLimit">开始获取时限</el-button>
                     </el-form>
@@ -65,6 +98,8 @@ export default {
     return {
       // echarts_data: [{'coords': [[117.0274, 36.67486], [116.407526, 39.90403]]}, {'coords': [[116.4134, 39.91092], [116.407526, 39.90403]]}, {'coords': [[114.5366, 38.0432], [116.407526, 39.90403]]}, {'coords': [[123.4888, 41.68465], [116.407526, 39.90403]]}, {'coords': [[112.5694, 37.87983], [116.407526, 39.90403]]}, {'coords': [[126.565, 45.77849], [116.407526, 39.90403]]}, {'coords': [[117.2081, 39.0911], [116.407526, 39.90403]]}, {'coords': [[126.5556, 43.84357], [116.407526, 39.90403]]}, {'coords': [[111.6723, 40.81774], [116.407526, 39.90403]]}, {'coords': [[113.2724, 23.13795], [113.676994, 22.906861]]}, {'coords': [[112.9896, 28.11827], [113.676994, 22.906861]]}, {'coords': [[108.3345, 22.82127], [113.676994, 22.906861]]}, {'coords': [[110.3555, 20.0258], [113.676994, 22.906861]]}, {'coords': [[113.7594, 34.77171], ['118.41597379136614', '31.55455993943438']]}, {'coords': [[118.7696, 32.06678], ['118.41597379136614', '31.55455993943438']]}, {'coords': [[120.1595, 30.27155], ['118.41597379136614', '31.55455993943438']]}, {'coords': [[121.4805, 31.23593], ['118.41597379136614', '31.55455993943438']]}, {'coords': [[119.2701, 26.09064], ['118.41597379136614', '31.55455993943438']]}, {'coords': [[114.3484, 30.5516], ['118.41597379136614', '31.55455993943438']]}, {'coords': [[117.3305, 31.73429], ['118.41597379136614', '31.55455993943438']]}, {'coords': [[115.9154, 28.68169], ['118.41597379136614', '31.55455993943438']]}, {'coords': [[104.0735, 30.57754], ['104.07382049859993', '30.577546681135527']]}, {'coords': [[108.9604, 34.27581], ['104.07382049859993', '30.577546681135527']]}, {'coords': [[102.7164, 25.05156], ['104.07382049859993', '30.577546681135527']]}, {'coords': [[106.5584, 29.569], ['104.07382049859993', '30.577546681135527']]}, {'coords': [[106.6797, 26.62223], ['104.07382049859993', '30.577546681135527']]}, {'coords': [[103.8325, 36.06546], ['104.07382049859993', '30.577546681135527']]}, {'coords': [[87.63347, 43.79924], ['104.07382049859993', '30.577546681135527']]}, {'coords': [[103.8672, 36.02628], ['104.07382049859993', '30.577546681135527']]}, {'coords': [[101.7798, 36.64578], ['104.07382049859993', '30.577546681135527']]}, {'coords': [[91.16703, 29.62534], ['104.07382049859993', '30.577546681135527']]}],
       echarts_data: [],
+        dialog1Visible: false,
+        dialog2Visible: false,
       baseUrl,
       baseImgPath,
       isShowUpload: true,
@@ -72,7 +107,9 @@ export default {
       localUrl: '',
         formData1: {
             warehouseLocationNumber: 4,
-            specWarehouse: '不指定仓'
+            specWarehouse: '不指定仓',
+            algori: "综合最优",
+            needgetJingWeiDu: "需要"
         },
         formData2: {
             name: '', // 店铺名称
@@ -288,19 +325,22 @@ export default {
     },
     async submitForm (formName) {
         console.log('before submit', formName)
+        this.dialog2Visible = true;
         let result =  await postWarehouseLocation(this.formData1)
         if (result.status == 'success') {
+            this.dialog2Visible = false;
             this.$message({
                 type: 'success',
                 message: '计算完成'
             })
         } else {
+            this.dialog2Visible = false;
             this.$message({
                 type: 'error',
                 message: result.message
             })
         }
-        this.initCharts(result.map_json)
+        this.initCharts(result.map_list)
 
     },
     submitUpload() {
@@ -338,6 +378,8 @@ export default {
                     a.download = result.filename
                     a.href = blobUrl
                     a.click()
+                    window.URL.revokeObjectURL(blobUrl)
+                    // document.body.removeChild(a)
                 } catch (e) {
                     console.log(e)
                     alert('保存文件出错')
@@ -346,7 +388,55 @@ export default {
         )
 
 
-    }
+    },
+    async getInputTemplate() {
+          // const url = 'http://127.0.0.1:5000/getTimeLimit'
+          // const config = {
+          //     responseType: 'arraybuffer',
+          //     headers: {
+          //
+          //     }
+          // }
+          // axios.post(url, config).then(
+          //     resp => {
+          //         const blob = new Blob([resp.data])
+          //     }
+          // ).catch(function (error) {
+          //     console.log(error)
+          // })
+          axios.post('http://127.0.0.1:5000/download/inputTemplate', {user_id: '1'}, {responseType: 'arraybuffer'}).then(
+              res => {
+                  try {
+                      // console.log(res.data)
+                      console.log(res.headers.message_dict)
+                      var result = JSON.parse(res.headers.message_dict)
+                      console.log(result.filename)
+
+                      // let binary = [];
+                      // binary.push(res)
+                      const blobUrl = window.URL.createObjectURL(new Blob([res.data]))
+                      const a = document.createElement('a')
+                      a.style.display = 'none'
+                      a.download = result.filename
+                      a.href = blobUrl
+                      a.click()
+                      window.URL.revokeObjectURL(blobUrl)
+                      // document.removeChild(a)
+                      // console.log("下载完毕")
+                  } catch (e) {
+                      console.log("error", e)
+                      alert('保存文件出错')
+                  }
+              }
+          )
+
+
+      },
+      cancleHighLevelConfig(){
+          this.dialog1Visible = false;
+          this.formData1.algori = "综合最优";
+          this.formData1.needgetJingWeiDu = "需要";
+      }
   }
 }
 </script>
