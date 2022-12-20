@@ -1,6 +1,6 @@
 <template>
     <div class="mixin-components-container">
-        <uyhj class="content-container">
+        <div class="content-container">
             <!-- 图片上传控件-->
             <el-row  :gutter="20">
                 <el-col span=16 style="background-color: white">
@@ -79,7 +79,7 @@
                 </el-col>
             </el-row>
 
-        </uyhj>
+        </div>
 
     </div>
 </template>
@@ -352,16 +352,8 @@ export default {
         const config = {
             responseType: 'arraybuffer',
             headers: {
-
             }
         }
-        // axios.post(url, config).then(
-        //     resp => {
-        //         const blob = new Blob([resp.data])
-        //     }
-        // ).catch(function (error) {
-        //     console.log(error)
-        // })
         axios.post('http://127.0.0.1:5000/getTimeLimit', {user_id: '1'}, {responseType: 'arraybuffer'}).then(
             res => {
                 try {

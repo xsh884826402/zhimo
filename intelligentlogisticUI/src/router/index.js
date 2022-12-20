@@ -1,3 +1,4 @@
+
 import Vue from 'vue'
 import Router from 'vue-router'
 
@@ -24,7 +25,9 @@ const dataset_list = r => require.ensure([], () => r(require('@/page/dataset_lis
 const single_predict = r => require.ensure([], () => r(require('@/page/single_predict')), 'single_predict')
 const single_image_predict = r => require.ensure([], () => r(require('@/page/single_image_predict')), 'single_image_predict')
 const warehouseLocation = r => require.ensure([], () => r(require('@/page/warehouseLocation')), 'warehouseLocation')
-
+const routePlan = r => require.ensure([], () => r(require('@/page/routePlan')), 'routePlan')
+const practice = r=> require.ensure([], () => r(require('@/page/practice')), 'practice')
+const practice2 = r=> require.ensure([], () => r(require('@/page/practice2')), 'practice2')
 const routes = [
   // {
   //   path: '/',
@@ -40,11 +43,26 @@ const routes = [
         component: home,
         meta: []
       },
+        {
+        path: '/routePlan',
+            component: routePlan
+      },
       {
         path: '/warehouseLocation',
         component: warehouseLocation
       // meta: ['添加数据', '添加商铺'],
-      }, {
+      },
+        {
+        path: '/practice',
+        component: practice
+        }
+      ,
+        {
+            path: '/practice2',
+            component: practice2
+        }
+        ,
+        {
         path: '/single_image_predict',
         component: single_image_predict
       // meta: ['添加数据', '添加商铺'],
