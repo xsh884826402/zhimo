@@ -24,7 +24,18 @@
                 <el-col span=8 style="background-color: #E9EEF3" >
 <!--                    <el-form :model="formData2">-->
 <!--                        <el-tag>获取时限</el-tag>-->
-                        <el-divider content-position="center">仓网规划结果展示</el-divider>
+                    <el-divider content-position="center">输入数据上传</el-divider>
+                    <el-upload
+                        class="upload-demo"
+                        ref="uploadRoutePlanData"
+                        action="http://127.0.0.1:5000/upload/routePlanData"
+                        :auto-upload="false">
+                        <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+                        <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
+                        <div slot="tip" class="el-upload__tip">请根据模板填写输入信息上</div>
+                    </el-upload>
+                    <el-button @click="getRoutePlanInputTemplate">下载模板</el-button>
+                    <el-divider content-position="center">线路规划结果展示</el-divider>
                         <el-button @click="startAnimationButton">开始动画</el-button>
                         <el-button @click="pauseAnimationButton">暂停动画</el-button>
                         <el-button @click="resumeAnimationButton">继续动画</el-button>
@@ -44,6 +55,7 @@
 import headTop from '@/components/headTop'
 import {baseUrl, baseImgPath} from '@/config/env'
 import AMapLoader from '@amap/amap-jsapi-loader'
+import axios from 'axios'
 export default {
     data () {
         return {
@@ -89,7 +101,55 @@ export default {
 
     },
     methods: {
-        initAMap() {
+        submitUpload() {
+            this.$refs.uploadRoutePlanData.submit();
+            this.$refs.uploadRoutePlanData.clearFiles();
+            this.getRoutePlanResult()
+        },
+        async getRoutePlanResult () {
+            axios.post('http://127.0.0.1:5000/routeplan_result',).then(
+                res => {
+                    var result = JSON.parse(res.headers.message_dict)
+                    console.info(result.routeplan)
+                    this.initAMap(result.routeplan)
+                }
+            )
+
+
+        },
+
+        async getRoutePlanInputTemplate() {
+            axios.post('http://127.0.0.1:5000/download/routeplan_inputTemplate', {user_id: '1'}, {responseType: 'arraybuffer'}).then(
+                res => {
+                    try {
+                        // console.log(res.data)
+                        console.log(res.headers.message_dict)
+                        var result = JSON.parse(res.headers.message_dict)
+                        console.log(result.filename)
+
+                        // let binary = [];
+                        // binary.push(res)
+                        const blobUrl = window.URL.createObjectURL(new Blob([res.data]))
+                        const a = document.createElement('a')
+                        a.style.display = 'none'
+                        a.download = result.filename
+                        a.href = blobUrl
+                        a.click()
+                        window.URL.revokeObjectURL(blobUrl)
+                        // document.removeChild(a)
+                        // console.log("下载完毕")
+                    } catch (e) {
+                        console.log("error", e)
+                        alert('保存文件出错')
+                    }
+                }
+            )
+
+
+        },
+
+
+        initAMap(routes) {
             const that = this
             console.info('in initMap')
             AMapLoader.load({
@@ -124,20 +184,20 @@ export default {
                     '#292421',
                     '#FFFF00'
                 ]
-                var routes = {
-                    '济南仓': [
-                        [
-                            {'name': '济南仓', 'geoCoord': [117.2187, 36.65717] },
-                            {'name': 'BB60', 'geoCoord': [116.9677, 36.64082] },
-                            {'name': 'BB8A', 'geoCoord': [116.455335, 36.288724] },
-                            {'name': 'BB8B', 'geoCoord': [116.447678, 36.273443] },
-                            {'name': 'BB04', 'geoCoord': [117.0742, 36.64804] },
-                            {'name': 'BB43', 'geoCoord': [117.095027, 36.669696] },
-                            // {"name": 'BB43',"geoCoord":[117.0950277, 36.66969639] },
-                            {'name': '济南仓', 'geoCoord': [117.2187, 36.65717] }
-                        ]
-                    ]
-                }
+                // var routes = {
+                //     '济南仓': [
+                //         [
+                //             {'name': '济南仓', 'geoCoord': [117.2187, 36.65717] },
+                //             {'name': 'BB60', 'geoCoord': [116.9677, 36.64082] },
+                //             {'name': 'BB8A', 'geoCoord': [116.455335, 36.288724] },
+                //             {'name': 'BB8B', 'geoCoord': [116.447678, 36.273443] },
+                //             {'name': 'BB04', 'geoCoord': [117.0742, 36.64804] },
+                //             {'name': 'BB43', 'geoCoord': [117.095027, 36.669696] },
+                //             // {"name": 'BB43',"geoCoord":[117.0950277, 36.66969639] },
+                //             {'name': '济南仓', 'geoCoord': [117.2187, 36.65717] }
+                //         ]
+                //     ]
+                // }
                 var opts = {
                     subdistrict: 0,
                     extensions: 'all',
@@ -250,7 +310,7 @@ export default {
                                                             path: lineArr,
                                                             showDir: true,
                                                             strokeColor: color, // 线颜色
-                                                            strokeWeight: 10 // 线宽
+                                                            strokeWeight: 5 // 线宽
                                                         })
                                                     } else {
                                                         log.error('获取驾车数据失败：' + result)
@@ -364,26 +424,6 @@ export default {
                     })
 
                 } )
-                // DistrictSearch可用
-                // var district = new AMap.DistrictSearch(opts)
-                // var countyInfo = {'name': '济南市', 'centerGeoCoord': [117.000923, 36.675807]}
-                // district.search(countyInfo['name'], function (status, result) {
-                //     console.info('in district', status, result)
-                // })
-                //
-                // var driving = new AMap.Driving({
-                //     map: map,
-                //     // panel: 'panel'
-                // })
-                // console.info('driving', driving)
-                // // Driving不可用
-                // driving.search(new AMap.LngLat(116.379028, 39.865042), new AMap.LngLat(116.427281, 39.903719), function(status, result) {
-                //     console.info('status here', status)
-                //     if (status=== 'complete'){
-                //         console.info('status', status)
-                //     }
-                //
-                // })
                 this.map = map
                 console.info('here', this.startAnimation)
 
