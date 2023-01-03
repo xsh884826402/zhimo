@@ -1,2 +1,0 @@
-webpackJsonp([10],{NjZH:function(e,n,t){"use strict";Object.defineProperty(n,"__esModule",{value:!0});var s={render:function(){var e=this.$createElement;return(this._self._c||e)("div",{staticClass:"fillcontain"},[this._v("\r\n        sendMessage\r\n    ")])},staticRenderFns:[]};var i=t("VU/8")({},s,!1,function(e){t("gaiV")},null,null);n.default=i.exports},gaiV:function(e,n){}});
-//# sourceMappingURL=10.bdc17b42d0b1209a533e.js.map

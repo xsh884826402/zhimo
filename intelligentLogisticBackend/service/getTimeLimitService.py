@@ -17,14 +17,19 @@ def getTimeLimitService(stores_path, points_path, time_cost_path, add_time_point
     message_dict['message'] = ''
 
     # 根据经纬度获取所属地市
-    cta = CoordinateToAddress('高德')
-    cta.key = 'f9c26925b7e4303e22a4ac67dc993ba7'
-    stores, message = cta.getStoresCity(pd.read_excel(stores_path))
-    stores.to_excel(stores_path, index=False)
-    if message != "success":
-       message_dict['status'] = 'fail'
-       message_dict['message'] = message
-       return message_dict, None
+    try:
+        cta = CoordinateToAddress('高德')
+        cta.key = 'f9c26925b7e4303e22a4ac67dc993ba7'
+        stores, message = cta.getStoresCity(pd.read_excel(stores_path))
+        stores.to_excel(stores_path, index=False)
+        if message != "success":
+           message_dict['status'] = 'fail'
+           message_dict['message'] = message
+           return message_dict, None
+    except Exception as e:
+        message_dict['status'] = 'fail'
+        message_dict['message'] = repr(e)
+        return message_dict, None
 
     print('根据经纬度获取城市成功')
 

@@ -4,8 +4,9 @@ from flask import Flask, render_template, request, Response, send_file, send_fro
 from flask_cors import CORS
 import pandas as pd
 import json
-from service.getWarehouseLocationControllerService import getWarehouseLocationControllerService
+from service.getWarehouseLocationService import getWarehouseLocationService
 from service.getJingweiduByAddress import getJingweiduByAddress
+from service.getRoutePlanService import getRoutePlanService
 from utils.check import *
 from service.getTimeLimitService import getTimeLimitService
 
@@ -55,6 +56,37 @@ def uploadWarehouseData():
     return Response(json.dumps(message), mimetype='application/json')
 
 
+@app.route('/upload/routePlanData', methods=['post'])
+def uploadRoutePlanData():
+    file = request.files.get('file')
+    file.save(routeplan_input_file_path)
+    message = {'status': 'success'}
+    return Response(json.dumps(message), mimetype='application/json')
+
+
+@app.route('/download/inputTemplate', methods=['post'])
+def downloadInputTemplate():
+    print(request)
+    message_dict = {'status': 'success', 'message': '', 'filename': ""}
+    # form_dict = request.get_json()
+    message_dict['filename'] = os.path.basename(inputTemplate_path)
+    response = make_response(send_file(inputTemplate_path, as_attachment=True))
+
+    response.headers['message_dict'] = json.dumps(message_dict)
+    response.headers['Access-Control-Expose-Headers'] = 'message_dict'
+    return response
+
+
+@app.route('/download/routeplan_inputTemplate', methods=['post'])
+def downloadRoutePlanInputTemplate():
+    print(request)
+    message_dict = {'status': 'success', 'message': '', 'filename': ""}
+    message_dict['filename'] = os.path.basename(routeplan_inputTemplate_path)
+    response = make_response(send_file(routeplan_inputTemplate_path, as_attachment=True))
+
+    response.headers['message_dict'] = json.dumps(message_dict)
+    response.headers['Access-Control-Expose-Headers'] = 'message_dict'
+    return response
 
 
 @app.route('/getWarehouseLocation', methods=['post'])
@@ -64,10 +96,11 @@ def getWarehouseLocationController():
     # 获取经纬度
     message = {'status': 'success'}
     form_dict = request.get_json()
-
+    print('form_dict', form_dict)
     # 检查输入文件的合法性
     # 检查需求点
     check_file = checkFile()
+
     data_demand_points = pd.read_excel(input_file_path, sheet_name='需求点')
     check_result = check_file.check(data_demand_points, file_type='需求点')
     # print(check_result, check_result['status'], type(check_result))
@@ -85,7 +118,6 @@ def getWarehouseLocationController():
 
     # 获取经纬度
     get_result = getJingweiduByAddress(input_file_path, sheet_name='需求点')
-    print(get_result)
     if get_result['status'] != 'success':
         return Response(json.dumps(get_result), mimetype='application/json')
     # 获取指定仓的经纬度，可选
@@ -95,23 +127,23 @@ def getWarehouseLocationController():
             return Response(json.dumps(get_result), mimetype='application/json')
 
     if form_dict['specWarehouse'] == '指定仓':
-        map_json = getWarehouseLocationControllerService(data=pd.read_excel(input_file_path, sheet_name='需求点'),
-                                                         spec_warehouses_data=pd.read_excel(input_file_path,
+        message_dict = getWarehouseLocationService(data=pd.read_excel(input_file_path, sheet_name='需求点'),
+                                               spec_warehouses_data=pd.read_excel(input_file_path,
                                                                                             sheet_name='指定仓'),
-                                                         n_clusters=int(form_dict['warehouseLocationNumber']),
-                                                         bool_spec_warehouse=True,
-                                                         result_dir=base_dir)
+                                               n_clusters=int(form_dict['warehouseLocationNumber']),
+                                               bool_spec_warehouse=True,
+                                               algorithm_type=form_dict['algori'],
+                                               result_dir=base_dir)
     else:
-        map_json = getWarehouseLocationControllerService(data=pd.read_excel(input_file_path, sheet_name='需求点'),
-                                                         n_clusters=int(form_dict['warehouseLocationNumber']),
-                                                         bool_spec_warehouse=False,
-                                                         result_dir=base_dir)
+        message_dict = getWarehouseLocationService(data=pd.read_excel(input_file_path, sheet_name='需求点'),
+                                               n_clusters=int(form_dict['warehouseLocationNumber']),
+                                               bool_spec_warehouse=False,
+                                               algorithm_type=form_dict['algori'],
+                                               result_dir=base_dir)
 
-    print('map_json', map_json)
-    message = {'status': 'success'}
-    message['message'] = 'success'
-    message['map_json'] = map_json
-    return Response(json.dumps(message), mimetype='application/json')
+    # print('map_json', map_json)
+
+    return Response(json.dumps(message_dict), mimetype='application/json')
 
 
 @app.route('/getTimeLimit', methods=['get', 'post'])
@@ -134,15 +166,32 @@ def getTimeLimitController():
     return response
 
 
+@app.route('/routeplan_result', methods=['post'])
+def getRoutePlanResultController():
+    message = {'status': 'success', 'message': '', 'filename': ""}
+    message_dict = getRoutePlanService(routeplan_inputTemplate_path)
+
+    response = make_response()
+    response.headers['message_dict'] = json.dumps(message_dict)
+    response.headers['Access-Control-Expose-Headers'] = 'message_dict'
+    return response
+
+
 
 
 if __name__ == '__main__':
     base_dir = os.path.join(os.getcwd(), 'data')
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
     print('base dir', base_dir)
     # input_file_path = 'input.xlsx'
     input_file_path = os.path.join(base_dir, 'input.xlsx')
+    routeplan_input_file_path = os.path.join(base_dir, 'routeplan_input.xlsx')
     stores_path = os.path.join(base_dir, 'stores.xlsx')
     points_path = os.path.join(base_dir, 'points.xlsx')
     time_cost_path = os.path.join(base_dir, 'line_time_cost')
     add_time_points_path = os.path.join(base_dir, 'add_time_points.xlsx')
+    inputTemplate_path = os.path.join(base_dir, 'inputTemplate.xlsx')
+    routeplan_inputTemplate_path = os.path.join(base_dir, 'routeplan_inputTemplate.xlsx')
+    print(routeplan_inputTemplate_path)
     app.run(debug=True)
