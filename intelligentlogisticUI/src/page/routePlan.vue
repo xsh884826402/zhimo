@@ -36,10 +36,14 @@
                     </el-upload>
                     <el-button @click="getRoutePlanInputTemplate">下载模板</el-button>
                     <el-divider content-position="center">线路规划结果展示</el-divider>
+                        <div>
                         <el-button @click="startAnimationButton">开始动画</el-button>
                         <el-button @click="pauseAnimationButton">暂停动画</el-button>
+                        </div>
+                        <div>
                         <el-button @click="resumeAnimationButton">继续动画</el-button>
                         <el-button @click="stopAnimationButton">停止动画</el-button>
+                        </div>
                     <!--                    </el-form>-->
                 </el-col>
             </el-row>
@@ -107,9 +111,10 @@ export default {
             this.getRoutePlanResult()
         },
         async getRoutePlanResult () {
-            axios.post('http://127.0.0.1:5000/routeplan_result',).then(
+            axios.post('http://127.0.0.1:5000/routeplan_result').then(
                 res => {
                     var result = JSON.parse(res.headers.message_dict)
+                    console.info(" routeplan debug")
                     console.info(result.routeplan)
                     this.initAMap(result.routeplan)
                 }
@@ -152,6 +157,7 @@ export default {
         initAMap(routes) {
             const that = this
             console.info('in initMap')
+            console.info(routes)
             AMapLoader.load({
                 key: 'c84f72f82ba9a3d7b0c8f38e22271811',  //设置您的key
                 version: "2.0",
